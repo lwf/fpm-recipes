@@ -34,14 +34,9 @@ set -e
 
 BIN_PATH="#{prefix("bin")}"
 
-update-alternatives --install /usr/bin/ruby ruby $BIN_PATH/ruby2.0 20000 \
-  --slave /usr/bin/erb erb $BIN_PATH/erb2.0 \
-  --slave /usr/bin/irb irb $BIN_PATH/irb2.0 \
-  --slave /usr/bin/rdoc rdoc $BIN_PATH/rdoc2.0 \
-  --slave /usr/bin/rake rake $BIN_PATH/rake2.0 \
-  --slave /usr/bin/ri ri $BIN_PATH/ri2.0 \
-  --slave /usr/bin/testrb testrb $BIN_PATH/testrb2.0
-update-alternatives --install /usr/bin/gem gem $BIN_PATH/gem2.0 20000
+for bin in irb gem rake rdoc erb testrb ri ruby; do
+  update-alternatives --install /usr/bin/$bin $bin $BIN_PATH/${bin}2.0 20000
+done
 
 exit 0
         __POSTINST
@@ -56,8 +51,9 @@ set -e
 BIN_PATH="#{prefix("bin")}"
 
 if [ "$1" != "upgrade" ]; then
-  update-alternatives --remove ruby $BIN_PATH/ruby2.0
-  update-alternatives --remove gem $BIN_PATH/gem2.0
+  for bin in irb gem rake rdoc erb testrb ri ruby; do
+    update-alternatives --remove $bin $BIN_PATH/${bin}2.0
+  done
 fi
 
 exit 0
