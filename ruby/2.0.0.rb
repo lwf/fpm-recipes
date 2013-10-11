@@ -1,7 +1,7 @@
 class Ruby200 < FPM::Cookery::Recipe
   description 'The Ruby virtual machine'
 
-  name 'ruby'
+  name 'ruby2.0'
   version '2.0.0.247'
   revision 0
   homepage 'http://www.ruby-lang.org/'
@@ -17,11 +17,50 @@ class Ruby200 < FPM::Cookery::Recipe
           'libtinfo5', 'libyaml-0-2', 'zlib1g'
 
   def build
-    configure :prefix => prefix, 'disable-install-doc' => true
+    configure :prefix => prefix,
+      'disable-install-doc' => true,
+      'program-suffix' => '2.0'
     make
   end
 
   def install
     make :install, 'DESTDIR' => destdir
+
+    with_trueprefix do
+      File.open(builddir('post-install'), 'w', 0755) do |f|
+        f.write <<-__POSTINST
+#!/bin/sh
+set -e
+
+BIN_PATH="#{prefix("bin")}"
+
+for bin in gem ruby; do
+  update-alternatives --install /usr/bin/$bin $bin $BIN_PATH/$bin 20000
+done
+
+exit 0
+        __POSTINST
+        self.class.post_install File.expand_path(f.path)
+      end
+
+      File.open(builddir('pre-uninstall'), 'w', 0755) do |f|
+        f.write <<-__PRERM
+#!/bin/sh
+set -e
+
+BIN_PATH="#{prefix("bin")}"
+
+if [ "$1" != "upgrade" ]; then
+  for bin in gem ruby; do
+    update-alternatives --remove $bin $BIN_PATH/$bin
+  done
+fi
+
+exit 0
+        __PRERM
+        self.class.pre_uninstall File.expand_path(f.path)
+      end
+    end
+
   end
 end
