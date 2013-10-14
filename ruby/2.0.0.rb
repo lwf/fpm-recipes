@@ -20,6 +20,9 @@ class Ruby200 < FPM::Cookery::Recipe
     configure :prefix => prefix,
       'disable-install-doc' => true,
       'program-suffix' => '2.0'
+    inline_replace 'lib/rubygems/defaults.rb' do |s|
+      s.gsub! 'ConfigMap[:bindir]', '"/usr/local/bin"'
+    end
     make
   end
 
